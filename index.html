@@ -5,53 +5,104 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BullBar — Real‑Time Stock Ticker for macOS</title>
   <meta name="description" content="BullBar is a lightweight macOS utility that displays a customizable, always‑on‑top strip of real‑time stock tickers.">
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     /* --------------------------------------------------
        Design Tokens & Reset
     -------------------------------------------------- */
     :root {
-      --color-bg: #f9f9f9;
-      --color-primary: #28a745;
-      --color-text: #333;
-      --color-muted: #555;
-      --color-card: #fff;
+      --bg: #f2f4f6;
+      --card-bg: #ffffff;
+      --primary: #28a745;
+      --primary-dark: #218838;
+      --text: #212529;
+      --muted: #6c757d;
       --radius: 8px;
       --spacing: 1rem;
+      --font-sans: 'Inter', -apple-system, Helvetica, Arial, sans-serif;
     }
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-    html { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; }
-    body { background: var(--color-bg); color: var(--color-text); }
-    a { color: var(--color-primary); text-decoration: none; }
-    img { max-width: 100%; display: block; }
+    html { font-family: var(--font-sans); color: var(--text); background: var(--bg); line-height: 1.6; }
+    body { overflow-x: hidden; }
+    a { color: var(--primary); text-decoration: none; }
+    a:hover { color: var(--primary-dark); }
+
+    img { display: block; max-width: 100%; }
 
     /* --------------------------------------------------
        Navigation
     -------------------------------------------------- */
     nav {
-      position: sticky; top: 0; z-index: 100;
-      background: var(--color-card);
+      position: sticky;
+      top: 0;
+      background: var(--card-bg);
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      padding: var(--spacing);
+      padding: 0.75rem var(--spacing);
+      z-index: 100;
     }
-    .nav-container { max-width: 900px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
-    .nav-logo { font-size: 1.25rem; font-weight: bold; }
+    .nav-container {
+      max-width: 960px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .nav-logo { font-size: 1.25rem; font-weight: 600; }
     .nav-links a { margin-left: 1rem; font-weight: 500; }
 
     /* --------------------------------------------------
-       Hero
+       Hero + Demo
     -------------------------------------------------- */
-    header { text-align: center; padding: 4rem 1rem; }
+    header {
+      text-align: center;
+      padding: 4rem 1rem 2rem;
+    }
     header h1 { font-size: 3rem; margin-bottom: 0.5rem; }
-    header p { font-size: 1.25rem; color: var(--color-muted); max-width: 600px; margin: 0.5rem auto; }
-    .btn { display: inline-block; margin-top: 1.5rem; background: var(--color-primary); color: #fff; padding: 0.75rem 1.5rem; border-radius: var(--radius); font-weight: 600; transition: background 0.2s; }
-    .btn:hover { background: #218838; }
+    header p { font-size: 1.25rem; color: var(--muted); max-width: 600px; margin: 0 auto 1.5rem; }
+    .btn { display: inline-block; background: var(--primary); color: #fff; padding: 0.75rem 1.5rem; border-radius: var(--radius); font-weight: 600; transition: background 0.2s; }
+    .btn:hover { background: var(--primary-dark); }
+
+    /* Simulated Ticker Demo */
+    .demo-ticker {
+      overflow: hidden;
+      background: var(--card-bg);
+      margin: 1rem 0;
+      border-top: 1px solid #e9ecef;
+      border-bottom: 1px solid #e9ecef;
+    }
+    .ticker-list {
+      display: flex;
+      list-style: none;
+      animation: scroll-ticker 20s linear infinite;
+    }
+    .ticker-item {
+      flex-shrink: 0;
+      padding: 0.75rem 1rem;
+      font-family: monospace;
+      font-weight: 500;
+      color: var(--text);
+    }
+    .ticker-item.up { color: #28a745; }
+    .ticker-item.down { color: #dc3545; }
+    @keyframes scroll-ticker {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
 
     /* --------------------------------------------------
        Features
     -------------------------------------------------- */
-    .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 2rem; max-width: 900px; margin: 3rem auto; padding: 0 1rem; }
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 2rem;
+      max-width: 960px;
+      margin: 3rem auto;
+      padding: 0 1rem;
+    }
     .feature-card {
-      background: var(--color-card);
+      background: var(--card-bg);
       border-radius: var(--radius);
       padding: 1.5rem;
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
@@ -59,27 +110,40 @@
       transition: transform 0.2s;
     }
     .feature-card:hover { transform: translateY(-4px); }
-    .feature-card h3 { margin-bottom: 0.75rem; font-size: 1.1rem; }
-    .feature-card p { color: var(--color-muted); font-size: 0.95rem; }
+    .feature-card h3 { margin-bottom: 0.5rem; font-size: 1.1rem; }
+    .feature-card p { color: var(--muted); font-size: 0.95rem; }
 
     /* --------------------------------------------------
        How It Works
     -------------------------------------------------- */
-    .how-it-works { background: #fff; padding: 3rem 1rem; }
+    .how-it-works { background: var(--card-bg); padding: 3rem 1rem; }
     .steps { max-width: 700px; margin: 0 auto; }
     .step { display: flex; align-items: flex-start; margin-bottom: 1.5rem; }
-    .step-number { flex-shrink: 0; background: var(--color-primary); color: #fff; width: 2rem; height: 2rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 1rem; }
-    .step-text { color: var(--color-text); }
+    .step-number {
+      background: var(--primary);
+      color: #fff;
+      width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      margin-right: 1rem;
+      flex-shrink: 0;
+    }
+    .step-text { color: var(--text); }
 
     /* --------------------------------------------------
-       Download Section
+       Download & Footer
     -------------------------------------------------- */
     #download { text-align: center; padding: 3rem 1rem; }
-
-    /* --------------------------------------------------
-       Footer
-    -------------------------------------------------- */
-    footer { text-align: center; padding: 2rem 1rem; color: var(--color-muted); font-size: 0.88rem; }
+    footer {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
   </style>
 </head>
 <body>
@@ -96,26 +160,49 @@
 
   <header>
     <h1>BullBar</h1>
-    <p>Monitor your favorite stocks at a glance with a sleek, always‑on‑top macOS ticker strip—fully customizable and lightweight.</p>
-    <a href="#download" class="btn">Download v1.0</a>
+    <p>Monitor your favorite stocks at a glance with a sleek, always‑on‑top ticker strip—fully customizable and lightweight on macOS.</p>
+    <a href="https://apps.apple.com/us/app/bullbar/id6745433379?mt=12" class="btn">Download v1.5</a>
+
+    <!-- Demo Ticker Simulation -->
+    <div class="demo-ticker">
+      <ul class="ticker-list">
+        <li class="ticker-item up">AAPL 172.35 ▲1.23%</li>
+        <li class="ticker-item down">TSLA 654.21 ▼2.11%</li>
+        <li class="ticker-item up">GOOGL 128.47 ▲0.87%</li>
+        <li class="ticker-item up">MSFT 299.12 ▲0.45%</li>
+        <li class="ticker-item down">AMZN 142.67 ▼0.58%</li>
+        <li class="ticker-item up">NVDA 418.33 ▲3.14%</li>
+        <!-- Duplicate for seamless scroll -->
+        <li class="ticker-item up">AAPL 172.35 ▲1.23%</li>
+        <li class="ticker-item down">TSLA 654.21 ▼2.11%</li>
+        <li class="ticker-item up">GOOGL 128.47 ▲0.87%</li>
+        <li class="ticker-item up">MSFT 299.12 ▲0.45%</li>
+        <li class="ticker-item down">AMZN 142.67 ▼0.58%</li>
+        <li class="ticker-item up">NVDA 418.33 ▲3.14%</li>
+      </ul>
+    </div>
   </header>
 
   <section id="features" class="features">
     <div class="feature-card">
-      <h3>Customizable Symbols</h3>
-      <p>Add, remove, or reorder tickers instantly in Settings.</p>
+      <h3>Custom Symbols</h3>
+      <p>Add, remove or reorder tickers with ease in Preferences.</p>
     </div>
     <div class="feature-card">
-      <h3>Adjust Speed & Refresh</h3>
-      <p>Control scroll speed and data refresh interval for your workflow.</p>
+      <h3>Speed & Refresh</h3>
+      <p>Optimize scroll speed and update rate for your workflow.</p>
     </div>
     <div class="feature-card">
       <h3>Always on Top</h3>
-      <p>Keep an eye on the market without interrupting other apps.</p>
+      <p>Stay informed without disrupting your workspace.</p>
     </div>
     <div class="feature-card">
-      <h3>Light & Dark Mode</h3>
-      <p>Seamless theming to match your macOS appearance.</p>
+      <h3>Dark & Light</h3>
+      <p>Automatically match your macOS appearance mode.</p>
+    </div>
+    <div class="feature-card">
+      <h3>Low Power Mode</h3>
+      <p>Conserve battery by throttling fetch and animation rates.</p>
     </div>
   </section>
 
@@ -123,21 +210,21 @@
     <div class="steps">
       <div class="step">
         <div class="step-number">1</div>
-        <div class="step-text">Open Preferences with <strong>⌘,</strong> and select your desired tickers.</div>
+        <div class="step-text"><strong>⌘,</strong> to open Preferences and pick your symbols.</div>
       </div>
       <div class="step">
         <div class="step-number">2</div>
-        <div class="step-text">Adjust scroll speed and refresh interval to suit your pace.</div>
+        <div class="step-text">Set scroll speed and refresh interval.</div>
       </div>
       <div class="step">
         <div class="step-number">3</div>
-        <div class="step-text">Watch BullBar float above all windows, keeping you informed.</div>
+        <div class="step-text">Enjoy BullBar floating atop all windows.</div>
       </div>
     </div>
   </section>
 
   <section id="download">
-    <a href="#" class="btn">Download on GitHub</a>
+    <a href="https://apps.apple.com/us/app/bullbar/id6745433379?mt=12" class="btn">Download on the AppStore</a>
   </section>
 
   <footer>
