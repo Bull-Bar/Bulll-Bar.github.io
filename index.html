@@ -7,28 +7,74 @@
   <meta name="description" content="BullBar is a lightweight macOS utility that displays a customizable, always‑on‑top strip of real‑time stock tickers.">
   <!-- Google Font -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     /* --------------------------------------------------
        Design Tokens & Reset
     -------------------------------------------------- */
     :root {
-      --bg: #f2f4f6;
+      /* Light mode variables */
+      --bg: #f8f9fa;
       --card-bg: #ffffff;
-      --primary: #28a745;
-      --primary-dark: #218838;
-      --text: #212529;
+      --primary: #3a86ff;
+      --primary-dark: #2667cc;
+      --primary-light: #e0ebff;
+      --secondary: #ff9e3a;
+      --text: #1a1a2e;
+      --text-light: #4a4a6a;
       --muted: #6c757d;
-      --radius: 8px;
+      --border: #e0e0e0;
+      --radius: 12px;
+      --radius-sm: 8px;
       --spacing: 1rem;
+      --shadow: 0 10px 30px rgba(0,0,0,0.05);
       --font-sans: 'Inter', -apple-system, Helvetica, Arial, sans-serif;
+      --transition: all 0.3s ease;
+      
+      /* Animation variables */
+      --animate-duration: 0.8s;
+      --animate-delay: 0.2s;
     }
+
+    /* Dark mode */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121212;
+        --card-bg: #1e1e1e;
+        --primary: #3a86ff;
+        --primary-dark: #2667cc;
+        --primary-light: #1a2c4d;
+        --secondary: #ff9e3a;
+        --text: #f8f9fa;
+        --text-light: #b0b0c0;
+        --muted: #a0a0a0;
+        --border: #2a2a2a;
+        --shadow: 0 10px 30px rgba(0,0,0,0.2);
+      }
+    }
+
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-    html { font-family: var(--font-sans); color: var(--text); background: var(--bg); line-height: 1.6; }
+    html { font-family: var(--font-sans); color: var(--text); background: var(--bg); line-height: 1.6; scroll-behavior: smooth; }
     body { overflow-x: hidden; }
-    a { color: var(--primary); text-decoration: none; }
+    a { color: var(--primary); text-decoration: none; transition: var(--transition); }
     a:hover { color: var(--primary-dark); }
 
     img { display: block; max-width: 100%; }
+    
+    /* Utility classes */
+    .container {
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+    
+    .text-gradient {
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
 
     /* --------------------------------------------------
        Navigation
@@ -36,199 +82,1111 @@
     nav {
       position: sticky;
       top: 0;
-      background: var(--card-bg);
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      padding: 0.75rem var(--spacing);
+      background: rgba(var(--card-bg), 0.95);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+      padding: 1rem var(--spacing);
       z-index: 100;
+      border-bottom: 1px solid var(--border);
+      transition: var(--transition);
     }
     .nav-container {
-      max-width: 960px;
+      max-width: 1140px;
       margin: 0 auto;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      padding: 0 1rem;
     }
-    .nav-logo { font-size: 1.25rem; font-weight: 600; }
-    .nav-links a { margin-left: 1rem; font-weight: 500; }
+    .nav-logo { 
+      font-size: 1.5rem; 
+      font-weight: 700; 
+      display: flex;
+      align-items: center;
+    }
+    .nav-logo i {
+      color: var(--primary);
+      margin-right: 0.5rem;
+    }
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+    }
+    .nav-links a { 
+      font-weight: 500; 
+      position: relative;
+      color: var(--text-light);
+      padding: 0.5rem 0;
+    }
+    .nav-links a:hover {
+      color: var(--primary);
+    }
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 2px;
+      bottom: 0;
+      left: 0;
+      background-color: var(--primary);
+      transition: var(--transition);
+    }
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+    
+    /* Mobile navigation */
+    .menu-toggle {
+      display: none;
+      cursor: pointer;
+      font-size: 1.5rem;
+    }
+    
+    @media (max-width: 768px) {
+      .menu-toggle {
+        display: block;
+      }
+      .nav-links {
+        position: fixed;
+        top: 0;
+        right: -100%;
+        width: 70%;
+        height: 100vh;
+        background: var(--card-bg);
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        transition: var(--transition);
+        box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+        z-index: 101;
+      }
+      .nav-links.active {
+        right: 0;
+      }
+      .nav-links a {
+        margin: 1rem 0;
+        font-size: 1.2rem;
+      }
+    }
 
     /* --------------------------------------------------
        Hero + Demo
     -------------------------------------------------- */
     header {
       text-align: center;
-      padding: 4rem 1rem 2rem;
+      padding: 6rem 1rem 4rem;
+      position: relative;
+      overflow: hidden;
     }
-    header h1 { font-size: 3rem; margin-bottom: 0.5rem; }
-    header p { font-size: 1.25rem; color: var(--muted); max-width: 600px; margin: 0 auto 1.5rem; }
-    .btn { display: inline-block; background: var(--primary); color: #fff; padding: 0.75rem 1.5rem; border-radius: var(--radius); font-weight: 600; transition: background 0.2s; }
-    .btn:hover { background: var(--primary-dark); }
-
+    
+    /* Background gradient */
+    header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, var(--primary-light) 0%, transparent 70%);
+      opacity: 0.3;
+      z-index: -1;
+    }
+    
+    header h1 { 
+      font-size: 4rem; 
+      margin-bottom: 1rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+    }
+    
+    header h1 span {
+      display: block;
+    }
+    
+    header h1 .highlight {
+      color: var(--primary);
+    }
+    
+    header p { 
+      font-size: 1.35rem; 
+      color: var(--text-light); 
+      max-width: 700px; 
+      margin: 0 auto 2rem;
+      line-height: 1.6;
+    }
+    
+    .hero-cta {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 3rem;
+    }
+    
+    .btn { 
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: var(--primary); 
+      color: #fff; 
+      padding: 0.9rem 2rem; 
+      border-radius: var(--radius); 
+      font-weight: 600; 
+      transition: var(--transition);
+      box-shadow: 0 4px 15px rgba(58, 134, 255, 0.3);
+    }
+    
+    .btn:hover { 
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(58, 134, 255, 0.4);
+    }
+    
+    .btn-secondary {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+      box-shadow: none;
+    }
+    
+    .btn-secondary:hover {
+      background: var(--card-bg);
+      color: var(--primary);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+    
     /* Simulated Ticker Demo */
     .demo-ticker {
       overflow: hidden;
       background: var(--card-bg);
-      margin: 1rem 0;
-      border-top: 1px solid #e9ecef;
-      border-bottom: 1px solid #e9ecef;
+      margin: 2rem auto;
+      max-width: 900px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      position: relative;
     }
+    
+    .demo-ticker::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 50px;
+      height: 100%;
+      background: linear-gradient(90deg, var(--card-bg), transparent);
+      z-index: 2;
+    }
+    
+    .demo-ticker::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 50px;
+      height: 100%;
+      background: linear-gradient(270deg, var(--card-bg), transparent);
+      z-index: 2;
+    }
+    
     .ticker-list {
       display: flex;
       list-style: none;
-      animation: scroll-ticker 20s linear infinite;
+      animation: scroll-ticker 25s linear infinite;
+      padding: 1rem 0;
     }
+    
     .ticker-item {
       flex-shrink: 0;
-      padding: 0.75rem 1rem;
-      font-family: monospace;
+      padding: 0.75rem 1.25rem;
+      margin: 0 0.5rem;
+      font-family: 'SF Mono', 'Roboto Mono', monospace;
       font-weight: 500;
       color: var(--text);
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: var(--transition);
     }
-    .ticker-item.up { color: #28a745; }
-    .ticker-item.down { color: #dc3545; }
+    
+    .ticker-item:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+    }
+    
+    .ticker-item.up { 
+      color: #22c55e; 
+      border-color: rgba(34, 197, 94, 0.2);
+    }
+    
+    .ticker-item.down { 
+      color: #ef4444; 
+      border-color: rgba(239, 68, 68, 0.2);
+    }
+    
+    .ticker-item i {
+      font-size: 0.8rem;
+    }
+    
     @keyframes scroll-ticker {
       0%   { transform: translateX(0); }
       100% { transform: translateX(-50%); }
+    }
+    
+    @media (max-width: 768px) {
+      header h1 {
+        font-size: 2.5rem;
+      }
+      
+      header p {
+        font-size: 1.1rem;
+      }
+      
+      .hero-cta {
+        flex-direction: column;
+        align-items: center;
+      }
     }
 
     /* --------------------------------------------------
        Features
     -------------------------------------------------- */
+    .section-title {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+    
+    .section-title h2 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      font-weight: 700;
+    }
+    
+    .section-title p {
+      color: var(--text-light);
+      max-width: 600px;
+      margin: 0 auto;
+      font-size: 1.1rem;
+    }
+    
     .features {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 2rem;
-      max-width: 960px;
-      margin: 3rem auto;
-      padding: 0 1rem;
+      max-width: 1140px;
+      margin: 5rem auto;
+      padding: 0 1.5rem;
     }
+    
     .feature-card {
       background: var(--card-bg);
       border-radius: var(--radius);
-      padding: 1.5rem;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-      text-align: center;
-      transition: transform 0.2s;
+      padding: 2rem;
+      box-shadow: var(--shadow);
+      text-align: left;
+      transition: var(--transition);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
     }
-    .feature-card:hover { transform: translateY(-4px); }
-    .feature-card h3 { margin-bottom: 0.5rem; font-size: 1.1rem; }
-    .feature-card p { color: var(--muted); font-size: 0.95rem; }
+    
+    .feature-card:hover { 
+      transform: translateY(-8px); 
+      box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+    }
+    
+    .feature-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 60px;
+      height: 60px;
+      background: var(--primary-light);
+      color: var(--primary);
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+      font-size: 1.5rem;
+    }
+    
+    .feature-card h3 { 
+      margin-bottom: 1rem; 
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+    
+    .feature-card p { 
+      color: var(--text-light); 
+      font-size: 1rem;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+    
+    .feature-link {
+      margin-top: auto;
+      display: inline-flex;
+      align-items: center;
+      font-weight: 500;
+      color: var(--primary);
+    }
+    
+    .feature-link i {
+      margin-left: 0.5rem;
+      transition: var(--transition);
+    }
+    
+    .feature-link:hover i {
+      transform: translateX(4px);
+    }
+    
+    @media (max-width: 768px) {
+      .section-title h2 {
+        font-size: 2rem;
+      }
+      
+      .features {
+        grid-template-columns: 1fr;
+      }
+    }
 
     /* --------------------------------------------------
        How It Works
     -------------------------------------------------- */
-    .how-it-works { background: var(--card-bg); padding: 3rem 1rem; }
-    .steps { max-width: 700px; margin: 0 auto; }
-    .step { display: flex; align-items: flex-start; margin-bottom: 1.5rem; }
+    .how-it-works { 
+      background: var(--bg); 
+      padding: 6rem 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    /* Background pattern */
+    .how-it-works::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: radial-gradient(var(--border) 1px, transparent 1px);
+      background-size: 20px 20px;
+      opacity: 0.3;
+      z-index: 0;
+    }
+    
+    .steps-container {
+      position: relative;
+      z-index: 1;
+      max-width: 1140px;
+      margin: 0 auto;
+    }
+    
+    .steps { 
+      max-width: 900px; 
+      margin: 3rem auto 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2.5rem;
+    }
+    
+    .step { 
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 2.5rem 2rem;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      transition: var(--transition);
+      position: relative;
+    }
+    
+    .step:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+    }
+    
     .step-number {
       background: var(--primary);
       color: #fff;
-      width: 2rem;
-      height: 2rem;
+      width: 3rem;
+      height: 3rem;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: bold;
-      margin-right: 1rem;
-      flex-shrink: 0;
+      font-size: 1.25rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 5px 15px rgba(58, 134, 255, 0.3);
     }
-    .step-text { color: var(--text); }
+    
+    .step-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--text);
+    }
+    
+    .step-text { 
+      color: var(--text-light);
+      line-height: 1.6;
+    }
+    
+    .step-icon {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      color: var(--primary-light);
+      font-size: 1.5rem;
+      opacity: 0.5;
+    }
+    
+    @media (max-width: 768px) {
+      .how-it-works {
+        padding: 4rem 1.5rem;
+      }
+      
+      .steps {
+        grid-template-columns: 1fr;
+      }
+    }
 
+    /* --------------------------------------------------
+       Testimonials
+    -------------------------------------------------- */
+    .testimonials {
+      padding: 6rem 1.5rem;
+      background: var(--card-bg);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .testimonials::before {
+      content: '';
+      position: absolute;
+      top: -10%;
+      right: -10%;
+      width: 40%;
+      height: 40%;
+      background: radial-gradient(circle, var(--primary-light) 0%, transparent 70%);
+      opacity: 0.2;
+      z-index: 0;
+      border-radius: 50%;
+    }
+    
+    .testimonials-container {
+      position: relative;
+      z-index: 1;
+      max-width: 1140px;
+      margin: 0 auto;
+    }
+    
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 2rem;
+      margin-top: 3rem;
+    }
+    
+    .testimonial-card {
+      background: var(--bg);
+      border-radius: var(--radius);
+      padding: 2rem;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      transition: var(--transition);
+      position: relative;
+    }
+    
+    .testimonial-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+    }
+    
+    .testimonial-content {
+      margin-bottom: 1.5rem;
+      color: var(--text);
+      font-size: 1.05rem;
+      line-height: 1.7;
+      position: relative;
+    }
+    
+    .testimonial-content::before {
+      content: '"';
+      font-size: 4rem;
+      color: var(--primary-light);
+      position: absolute;
+      top: -2rem;
+      left: -1rem;
+      opacity: 0.3;
+      font-family: Georgia, serif;
+    }
+    
+    .testimonial-author {
+      display: flex;
+      align-items: center;
+    }
+    
+    .author-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: var(--primary-light);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      margin-right: 1rem;
+    }
+    
+    .author-info h4 {
+      font-size: 1.1rem;
+      margin-bottom: 0.25rem;
+      color: var(--text);
+    }
+    
+    .author-info p {
+      font-size: 0.9rem;
+      color: var(--text-light);
+    }
+    
+    .testimonial-rating {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.5rem;
+      color: var(--secondary);
+      font-size: 1rem;
+    }
+    
+    @media (max-width: 768px) {
+      .testimonials {
+        padding: 4rem 1.5rem;
+      }
+      
+      .testimonials-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
     /* --------------------------------------------------
        Download & Footer
     -------------------------------------------------- */
-    #download { text-align: center; padding: 3rem 1rem; }
+    #download { 
+      text-align: center; 
+      padding: 6rem 1.5rem;
+      background: var(--bg);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .download-container {
+      position: relative;
+      z-index: 1;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    
+    .download-title {
+      font-size: 2.5rem;
+      margin-bottom: 1.5rem;
+      font-weight: 700;
+    }
+    
+    .download-description {
+      color: var(--text-light);
+      font-size: 1.1rem;
+      margin-bottom: 2.5rem;
+      line-height: 1.6;
+    }
+    
+    .download-btn {
+      padding: 1rem 2.5rem;
+      font-size: 1.1rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    
+    .download-btn i {
+      font-size: 1.3rem;
+    }
+    
     footer {
       text-align: center;
-      padding: 2rem 1rem;
+      padding: 3rem 1.5rem;
       color: var(--muted);
-      font-size: 0.88rem;
+      font-size: 0.95rem;
+      background: var(--card-bg);
+      border-top: 1px solid var(--border);
+    }
+    
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin: 1.5rem 0;
+    }
+    
+    .footer-links a {
+      color: var(--text-light);
+      transition: var(--transition);
+    }
+    
+    .footer-links a:hover {
+      color: var(--primary);
+    }
+    
+    .social-links {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .social-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--bg);
+      color: var(--text-light);
+      transition: var(--transition);
+      border: 1px solid var(--border);
+    }
+    
+    .social-link:hover {
+      background: var(--primary);
+      color: white;
+      transform: translateY(-3px);
+    }
+    
+    /* --------------------------------------------------
+       Animation Classes
+    -------------------------------------------------- */
+    .animate {
+      opacity: 0;
+      transition: transform var(--animate-duration) ease, opacity var(--animate-duration) ease;
+    }
+    
+    .animate.fade-in {
+      opacity: 0;
+    }
+    
+    .animate.fade-in.animate-active {
+      opacity: 1;
+    }
+    
+    .animate.slide-up {
+      transform: translateY(40px);
+      opacity: 0;
+    }
+    
+    .animate.slide-up.animate-active {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    
+    .animate.slide-right {
+      transform: translateX(-40px);
+      opacity: 0;
+    }
+    
+    .animate.slide-right.animate-active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    
+    .animate.slide-left {
+      transform: translateX(40px);
+      opacity: 0;
+    }
+    
+    .animate.slide-left.animate-active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    
+    .animate.zoom-in {
+      transform: scale(0.9);
+      opacity: 0;
+    }
+    
+    .animate.zoom-in.animate-active {
+      transform: scale(1);
+      opacity: 1;
+    }
+    
+    /* Animation delays */
+    .delay-1 {
+      transition-delay: calc(var(--animate-delay) * 1);
+    }
+    
+    .delay-2 {
+      transition-delay: calc(var(--animate-delay) * 2);
+    }
+    
+    .delay-3 {
+      transition-delay: calc(var(--animate-delay) * 3);
+    }
+    
+    .delay-4 {
+      transition-delay: calc(var(--animate-delay) * 4);
+    }
+    
+    .delay-5 {
+      transition-delay: calc(var(--animate-delay) * 5);
     }
   </style>
 </head>
 <body>
-  <nav>
+  <nav aria-label="Main navigation">
     <div class="nav-container">
-      <div class="nav-logo">BullBar</div>
-      <div class="nav-links">
-        <a href="#features">Features</a>
-        <a href="#how-it-works">How It Works</a>
-        <a href="#download">Download</a>
+      <div class="nav-logo" aria-label="BullBar logo">
+        <i class="fas fa-chart-line" aria-hidden="true"></i>
+        BullBar
       </div>
+      <div class="nav-links" role="navigation">
+        <a href="#features" aria-label="Go to Features section">Features</a>
+        <a href="#how-it-works" aria-label="Go to How It Works section">How It Works</a>
+        <a href="#testimonials" aria-label="Go to Testimonials section">Testimonials</a>
+        <a href="#download" aria-label="Go to Download section">Download</a>
+      </div>
+      <button class="menu-toggle" aria-expanded="false" aria-controls="mobile-menu" aria-label="Toggle mobile menu">
+        <i class="fas fa-bars" aria-hidden="true"></i>
+      </button>
     </div>
   </nav>
 
-  <header>
-    <h1>BullBar</h1>
-    <p>Monitor your favorite stocks at a glance with a sleek, always‑on‑top ticker strip—fully customizable and lightweight on macOS.</p>
-    <a href="https://apps.apple.com/us/app/bullbar/id6745433379?mt=12" class="btn">Download v1.5</a>
+  <header role="banner">
+    <h1>
+      <span class="animate fade-in">Real-Time</span>
+      <span class="animate fade-in delay-1">Stock Ticker for <span class="highlight">macOS</span></span>
+    </h1>
+    <p class="animate fade-in delay-2">Monitor your investments at a glance with a sleek, always-on-top ticker strip—fully customizable and lightweight on your Mac.</p>
+    
+    <div class="hero-cta animate fade-in delay-3" role="group" aria-label="Download options">
+      <a href="https://apps.apple.com/us/app/bullbar/id6745433379?mt=12" class="btn" aria-label="Download version 1.5 from the App Store">
+        <i class="fab fa-apple" aria-hidden="true"></i> Download v1.5
+      </a>
+      <a href="#features" class="btn btn-secondary" aria-label="Learn more about BullBar features">
+        <i class="fas fa-info-circle" aria-hidden="true"></i> Learn More
+      </a>
+    </div>
 
     <!-- Demo Ticker Simulation -->
-    <div class="demo-ticker">
-      <ul class="ticker-list">
-        <li class="ticker-item up">AAPL 172.35 ▲1.23%</li>
-        <li class="ticker-item down">TSLA 654.21 ▼2.11%</li>
-        <li class="ticker-item up">GOOGL 128.47 ▲0.87%</li>
-        <li class="ticker-item up">MSFT 299.12 ▲0.45%</li>
-        <li class="ticker-item down">AMZN 142.67 ▼0.58%</li>
-        <li class="ticker-item up">NVDA 418.33 ▲3.14%</li>
-        <!-- Duplicate for seamless scroll -->
-        <li class="ticker-item up">AAPL 172.35 ▲1.23%</li>
-        <li class="ticker-item down">TSLA 654.21 ▼2.11%</li>
-        <li class="ticker-item up">GOOGL 128.47 ▲0.87%</li>
-        <li class="ticker-item up">MSFT 299.12 ▲0.45%</li>
-        <li class="ticker-item down">AMZN 142.67 ▼0.58%</li>
-        <li class="ticker-item up">NVDA 418.33 ▲3.14%</li>
+    <div class="demo-ticker" aria-label="Stock ticker demonstration" role="region">
+      <ul class="ticker-list" aria-label="Scrolling stock prices">
+        <li class="ticker-item up">
+          <i class="fas fa-arrow-up" aria-hidden="true"></i> 
+          <span aria-label="Apple stock up 1.23 percent">AAPL 172.35 +1.23%</span>
+        </li>
+        <li class="ticker-item down">
+          <i class="fas fa-arrow-down" aria-hidden="true"></i> 
+          <span aria-label="Tesla stock down 2.11 percent">TSLA 654.21 -2.11%</span>
+        </li>
+        <li class="ticker-item up">
+          <i class="fas fa-arrow-up" aria-hidden="true"></i> 
+          <span aria-label="Google stock up 0.87 percent">GOOGL 128.47 +0.87%</span>
+        </li>
+        <li class="ticker-item up">
+          <i class="fas fa-arrow-up" aria-hidden="true"></i> 
+          <span aria-label="Microsoft stock up 0.45 percent">MSFT 299.12 +0.45%</span>
+        </li>
+        <li class="ticker-item down">
+          <i class="fas fa-arrow-down" aria-hidden="true"></i> 
+          <span aria-label="Amazon stock down 0.58 percent">AMZN 142.67 -0.58%</span>
+        </li>
+        <li class="ticker-item up">
+          <i class="fas fa-arrow-up" aria-hidden="true"></i> 
+          <span aria-label="Nvidia stock up 3.14 percent">NVDA 418.33 +3.14%</span>
+        </li>
+        <!-- Duplicate for seamless scroll (hidden from screen readers) -->
+        <li class="ticker-item up" aria-hidden="true">
+          <i class="fas fa-arrow-up"></i> AAPL 172.35 +1.23%
+        </li>
+        <li class="ticker-item down" aria-hidden="true">
+          <i class="fas fa-arrow-down"></i> TSLA 654.21 -2.11%
+        </li>
+        <li class="ticker-item up" aria-hidden="true">
+          <i class="fas fa-arrow-up"></i> GOOGL 128.47 +0.87%
+        </li>
+        <li class="ticker-item up" aria-hidden="true">
+          <i class="fas fa-arrow-up"></i> MSFT 299.12 +0.45%
+        </li>
+        <li class="ticker-item down" aria-hidden="true">
+          <i class="fas fa-arrow-down"></i> AMZN 142.67 -0.58%
+        </li>
+        <li class="ticker-item up" aria-hidden="true">
+          <i class="fas fa-arrow-up"></i> NVDA 418.33 +3.14%
+        </li>
       </ul>
     </div>
   </header>
 
-  <section id="features" class="features">
-    <div class="feature-card">
-      <h3>Custom Symbols</h3>
-      <p>Add, remove or reorder tickers with ease in Preferences.</p>
+  <section id="features" aria-labelledby="features-title">
+    <div class="section-title animate slide-up">
+      <h2 id="features-title">Features You'll Love</h2>
+      <p>Designed with productivity and simplicity in mind</p>
     </div>
-    <div class="feature-card">
-      <h3>Speed & Refresh</h3>
-      <p>Optimize scroll speed and update rate for your workflow.</p>
-    </div>
-    <div class="feature-card">
-      <h3>Always on Top</h3>
-      <p>Stay informed without disrupting your workspace.</p>
-    </div>
-    <div class="feature-card">
-      <h3>Dark & Light</h3>
-      <p>Automatically match your macOS appearance mode.</p>
-    </div>
-    <div class="feature-card">
-      <h3>Low Power Mode</h3>
-      <p>Conserve battery by throttling fetch and animation rates.</p>
+    
+    <div class="features" role="list">
+      <div class="feature-card animate slide-up delay-1" role="listitem">
+        <div class="feature-icon" aria-hidden="true">
+          <i class="fas fa-edit"></i>
+        </div>
+        <h3>Custom Symbols</h3>
+        <p>Add, remove or reorder your favorite stock tickers with ease in Preferences. Track exactly what matters to you.</p>
+        <a href="#" class="feature-link" aria-label="Learn more about Custom Symbols">
+          Learn more <i class="fas fa-chevron-right" aria-hidden="true"></i>
+        </a>
+      </div>
+      
+      <div class="feature-card animate slide-up delay-2" role="listitem">
+        <div class="feature-icon" aria-hidden="true">
+          <i class="fas fa-tachometer-alt"></i>
+        </div>
+        <h3>Speed & Refresh</h3>
+        <p>Optimize scroll speed and update rate for your workflow. Get the perfect balance between real-time data and system performance.</p>
+        <a href="#" class="feature-link" aria-label="Learn more about Speed and Refresh options">
+          Learn more <i class="fas fa-chevron-right" aria-hidden="true"></i>
+        </a>
+      </div>
+      
+      <div class="feature-card animate slide-up delay-3" role="listitem">
+        <div class="feature-icon" aria-hidden="true">
+          <i class="fas fa-thumbtack"></i>
+        </div>
+        <h3>Always on Top</h3>
+        <p>Stay informed without disrupting your workspace. BullBar floats above all windows, keeping market data in view at all times.</p>
+        <a href="#" class="feature-link" aria-label="Learn more about Always on Top feature">
+          Learn more <i class="fas fa-chevron-right" aria-hidden="true"></i>
+        </a>
+      </div>
+      
+      <div class="feature-card animate slide-up delay-4" role="listitem">
+        <div class="feature-icon" aria-hidden="true">
+          <i class="fas fa-moon"></i>
+        </div>
+        <h3>Dark & Light</h3>
+        <p>Automatically match your macOS appearance mode. BullBar adapts to your system preferences for a seamless visual experience.</p>
+        <a href="#" class="feature-link" aria-label="Learn more about Dark and Light modes">
+          Learn more <i class="fas fa-chevron-right" aria-hidden="true"></i>
+        </a>
+      </div>
+      
+      <div class="feature-card animate slide-up delay-5" role="listitem">
+        <div class="feature-icon" aria-hidden="true">
+          <i class="fas fa-battery-half"></i>
+        </div>
+        <h3>Low Power Mode</h3>
+        <p>Conserve battery by throttling fetch and animation rates. Perfect for when you're working on the go or away from a power source.</p>
+        <a href="#" class="feature-link" aria-label="Learn more about Low Power Mode">
+          Learn more <i class="fas fa-chevron-right" aria-hidden="true"></i>
+        </a>
+      </div>
     </div>
   </section>
 
-  <section id="how-it-works" class="how-it-works">
-    <div class="steps">
-      <div class="step">
-        <div class="step-number">1</div>
-        <div class="step-text"><strong>⌘,</strong> to open Preferences and pick your symbols.</div>
+  <section id="how-it-works" class="how-it-works" aria-labelledby="how-it-works-title">
+    <div class="steps-container">
+      <div class="section-title animate slide-up">
+        <h2 id="how-it-works-title">Simple to Use</h2>
+        <p>Get started in just a few steps</p>
       </div>
-      <div class="step">
-        <div class="step-number">2</div>
-        <div class="step-text">Set scroll speed and refresh interval.</div>
+      
+      <div class="steps" role="list" aria-label="Three steps to get started with BullBar">
+        <div class="step animate slide-right delay-1" role="listitem">
+          <div class="step-icon" aria-hidden="true"><i class="fas fa-cog"></i></div>
+          <div class="step-number" aria-hidden="true">1</div>
+          <div class="step-title">Configure</div>
+          <div class="step-text">Press <span aria-label="Command comma"><strong>⌘,</strong></span> to open Preferences and select your favorite stock symbols to track.</div>
+        </div>
+        
+        <div class="step animate zoom-in delay-2" role="listitem">
+          <div class="step-icon" aria-hidden="true"><i class="fas fa-sliders-h"></i></div>
+          <div class="step-number" aria-hidden="true">2</div>
+          <div class="step-title">Customize</div>
+          <div class="step-text">Set your preferred scroll speed and refresh interval to match your workflow needs.</div>
+        </div>
+        
+        <div class="step animate slide-left delay-3" role="listitem">
+          <div class="step-icon" aria-hidden="true"><i class="fas fa-check-circle"></i></div>
+          <div class="step-number" aria-hidden="true">3</div>
+          <div class="step-title">Enjoy</div>
+          <div class="step-text">BullBar will float atop all windows, keeping you informed without getting in your way.</div>
+        </div>
       </div>
-      <div class="step">
-        <div class="step-number">3</div>
-        <div class="step-text">Enjoy BullBar floating atop all windows.</div>
+    </div>
+  </section>
+  
+  <section id="testimonials" class="testimonials" aria-labelledby="testimonials-title">
+    <div class="testimonials-container">
+      <div class="section-title animate slide-up">
+        <h2 id="testimonials-title">What Users Say</h2>
+        <p>Join thousands of satisfied users who rely on BullBar daily</p>
+      </div>
+      
+      <div class="testimonials-grid" role="region" aria-label="User testimonials">
+        <article class="testimonial-card animate fade-in delay-1">
+          <div class="testimonial-rating" aria-label="Five out of five stars">
+            <i class="fas fa-star" aria-hidden="true"></i>
+            <i class="fas fa-star" aria-hidden="true"></i>
+            <i class="fas fa-star" aria-hidden="true"></i>
+            <i class="fas fa-star" aria-hidden="true"></i>
+            <i class="fas fa-star" aria-hidden="true"></i>
+          </div>
+          <blockquote class="testimonial-content">
+            "BullBar has completely changed how I monitor the market. I can keep an eye on my investments while working on other tasks. Simple, elegant, and incredibly useful!"
+          </blockquote>
+          <div class="testimonial-author">
+            <div class="author-avatar" aria-hidden="true">MJ</div>
+            <div class="author-info">
+              <h4>Michael Johnson</h4>
+              <p>Day Trader</p>
+            </div>
+          </div>
+        </article>
+        
+        <article class="testimonial-card animate fade-in delay-2">
+          <div class="testimonial-rating" aria-label="Five out of five stars">
+            <i class="fas fa-star" aria-hidden="true"></i>
+            <i class="fas fa-star" aria-hidden="true"></i>
+            <i class="fas fa-star" aria-hidden="true"></i>
+            <i class="fas fa-star" aria-hidden="true"></i>
+            <i class="fas fa-star" aria-hidden="true"></i>
+          </div>
+          <blockquote class="testimonial-content">
+            "As a financial advisor, I need to stay on top of market movements. BullBar lets me do that without constantly switching between apps. The customization options are perfect!"
+          </blockquote>
+          <div class="testimonial-author">
+            <div class="author-avatar" aria-hidden="true">SL</div>
+            <div class="author-info">
+              <h4>Sarah Lee</h4>
+              <p>Financial Advisor</p>
+            </div>
+          </div>
+        </article>
+        
+        <article class="testimonial-card animate fade-in delay-3">
+          <div class="testimonial-rating" aria-label="Four and a half out of five stars">
+            <i class="fas fa-star" aria-hidden="true"></i>
+            <i class="fas fa-star" aria-hidden="true"></i>
+            <i class="fas fa-star" aria-hidden="true"></i>
+            <i class="fas fa-star" aria-hidden="true"></i>
+            <i class="fas fa-star-half-alt" aria-hidden="true"></i>
+          </div>
+          <blockquote class="testimonial-content">
+            "I love how lightweight BullBar is. It doesn't slow down my Mac at all, and the dark mode support is fantastic. It's become an essential part of my desktop setup."
+          </blockquote>
+          <div class="testimonial-author">
+            <div class="author-avatar" aria-hidden="true">DP</div>
+            <div class="author-info">
+              <h4>David Park</h4>
+              <p>Software Engineer</p>
+            </div>
+          </div>
+        </article>
       </div>
     </div>
   </section>
 
-  <section id="download">
-    <a href="https://apps.apple.com/us/app/bullbar/id6745433379?mt=12" class="btn">Download on the AppStore</a>
+  <section id="download" aria-labelledby="download-title">
+    <div class="download-container">
+      <h2 id="download-title" class="download-title animate zoom-in">Ready to Elevate Your Trading Experience?</h2>
+      <p class="download-description animate fade-in delay-1">Download BullBar today and never miss an important market movement again. Available exclusively on the Mac App Store.</p>
+      <a href="https://apps.apple.com/us/app/bullbar/id6745433379?mt=12" class="btn download-btn animate slide-up delay-2" aria-label="Download BullBar from the App Store">
+        <i class="fab fa-apple" aria-hidden="true"></i> Download on the App Store
+      </a>
+    </div>
   </section>
 
-  <footer>
-    &copy; 2025 BullBar &bull; <a href="privacy.html">Privacy Policy</a> &bull; <a href="terms.html">Terms of Use</a>
+  <footer role="contentinfo">
+    <div class="social-links animate fade-in" aria-label="Social media links">
+      <a href="#" class="social-link" aria-label="Follow us on Twitter">
+        <i class="fab fa-twitter" aria-hidden="true"></i>
+      </a>
+      <a href="#" class="social-link" aria-label="Visit our GitHub page">
+        <i class="fab fa-github" aria-hidden="true"></i>
+      </a>
+      <a href="#" class="social-link" aria-label="Connect with us on LinkedIn">
+        <i class="fab fa-linkedin" aria-hidden="true"></i>
+      </a>
+    </div>
+    
+    <nav class="footer-links animate fade-in delay-1" aria-label="Footer navigation">
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="terms.html">Terms of Use</a>
+      <a href="#features">Features</a>
+      <a href="#download">Download</a>
+    </nav>
+    
+    <p class="animate fade-in delay-2">&copy; <time datetime="2025">2025</time> BullBar. All rights reserved.</p>
   </footer>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Simple mobile menu toggle
+      const menuToggle = document.querySelector('.menu-toggle');
+      const navLinks = document.querySelector('.nav-links');
+      
+      if (menuToggle) {
+        menuToggle.addEventListener('click', function() {
+          const expanded = this.getAttribute('aria-expanded') === 'true' || false;
+          this.setAttribute('aria-expanded', !expanded);
+          navLinks.classList.toggle('active');
+        });
+      }
+      
+      // Close menu when clicking a link
+      const links = document.querySelectorAll('.nav-links a');
+      links.forEach(link => {
+        link.addEventListener('click', function() {
+          navLinks.classList.remove('active');
+          menuToggle.setAttribute('aria-expanded', 'false');
+        });
+      });
+      
+      // Scroll animations
+      const animateElements = document.querySelectorAll('.animate');
+      
+      // Immediately activate animations that are in the viewport on page load
+      animateElementsInView();
+      
+      // Activate animations when scrolling
+      window.addEventListener('scroll', animateElementsInView);
+      
+      function animateElementsInView() {
+        const windowHeight = window.innerHeight;
+        const triggerPoint = 150; // How many pixels from the bottom of the viewport to trigger the animation
+        
+        animateElements.forEach(element => {
+          const elementTop = element.getBoundingClientRect().top;
+          
+          // Check if element is in viewport
+          if (elementTop < windowHeight - triggerPoint) {
+            element.classList.add('animate-active');
+          }
+        });
+      }
+      
+      // Activate animations for elements that are already in view on page load
+      setTimeout(function() {
+        const headerAnimations = document.querySelectorAll('header .animate');
+        headerAnimations.forEach(element => {
+          element.classList.add('animate-active');
+        });
+      }, 100);
+    });
+  </script>
 </body>
 </html>
